@@ -6,7 +6,7 @@
     <script src="../js/core-functionality.js"></script>
 </head>
 
-<body style="margin: 0; padding: 0; height: 3000px;">
+<body style="margin: 0; padding: 0; height: 5000px;">
 
 <canvas id="c" width="1920px" height="1080px" style="position: fixed; width: 100%; height: 100%;"></canvas>
 
@@ -28,7 +28,8 @@
     let canvasHeight = canvas.clientHeight;
 
     let renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
-    renderer.setClearColor(new THREE.Color(1, .5, 1))
+    // renderer.setClearColor(new THREE.Color(1, .5, 1));
+    renderer.setClearColor(new THREE.Color(0x807e7e));
 
     let renderTarget = new THREE.WebGLRenderTarget(canvasWidth, canvasHeight,
         {
@@ -44,6 +45,7 @@
     let cameraScrollEnd = -1.25 * (canvasWidth/canvasHeight) * (3786/1980) / 2;
     let camera = new THREE.OrthographicCamera(-1, 1, 1, -1, .0, 1000);
     camera.aspect = canvasWidth / canvasHeight;
+    camera.position.z = 100;
 
     camera.position.y = cameraScrollStart;
 
@@ -71,9 +73,6 @@
     composer.addPass(clearMaskPass);
     composer.addPass(outputPass);
 
-    let torus = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshBasicMaterial({color: 0xFF0000}));
-    torus.position.z = -100;
-    underScene.add(torus);
 
     let textureLoader = new THREE.TextureLoader();
     let loader = new FBXLoader();
@@ -86,6 +85,57 @@
         return {border: border, content: content, box: box};
     }
 
+    function CreateSprite(source, width, height) {
+
+        let map = new THREE.TextureLoader().load(source);
+        map.anisotropy = 0;
+        map.magFilter = THREE.NearestFilter;
+        map.minFilter = THREE.NearestFilter;
+
+        let spriteMaterial = new THREE.SpriteMaterial({map: map});
+
+        let sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(width, height, 1);
+
+        return sprite;
+    }
+
+
+    //TODO: base the width and height off of the size of the panel
+    let scalar = 1.6;
+    let maskPanelWidth = scalar;
+    let maskPanelHeight = scalar * (canvasWidth/canvasHeight) * (3786/1980);
+
+    let grass0 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_grass_0.png", maskPanelWidth, maskPanelHeight);
+    grass0.position.z = 0;
+    underScene.add(grass0);
+    let tree1 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_tree_1.png", maskPanelWidth, maskPanelHeight);
+    tree1.position.z = -1;
+    underScene.add(tree1);
+    let grass2 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_grass_2.png", maskPanelWidth, maskPanelHeight);
+    grass2.position.z = -2;
+    underScene.add(grass2);
+    let excavator3 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_excavator_3.png", maskPanelWidth, maskPanelHeight);
+    excavator3.position.z = -3;
+    underScene.add(excavator3);
+    let fence4 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_fence_4.png", maskPanelWidth, maskPanelHeight);
+    fence4.position.z = -4;
+    underScene.add(fence4);
+    let buildings5 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_buildings_5.png", maskPanelWidth, maskPanelHeight);
+    buildings5.position.z = -5;
+    underScene.add(buildings5);
+    let buildings6 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_buildings_6.png", maskPanelWidth, maskPanelHeight);
+    buildings6.position.z = -6;
+    underScene.add(buildings6);
+    let buildings7 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_buildings_7.png", maskPanelWidth, maskPanelHeight);
+    buildings7.position.z = -7;
+    underScene.add(buildings7);
+    let sky8 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_sky_8.png", maskPanelWidth, maskPanelHeight);
+    sky8.position.z = -8;
+    underScene.add(sky8);
+
+
+
     let top_m_tri;
     loader.load("../models/panel_test/top_m_tri.fbx",
         function (object) {
@@ -93,6 +143,7 @@
             object.children[0].rotation.x = 0;
             object.scale.x = panelScaleX
             object.scale.y = panelScaleY;
+
 
             let border = object.clone();
             border.children[0].material = new THREE.MeshBasicMaterial({alphaTest: .5, map: textureLoader.load("../imgs/panel_test/top_m_tri/top_m_tri_border.png")});
@@ -102,6 +153,9 @@
             grid.position.z = -1;
 
             let box = new THREE.BoxHelper(border, 0xff0000);
+            box.geometry.computeBoundingBox();
+            cameraScrollStart = box.geometry.boundingBox.max.y - 1 + .1;
+
             top_m_tri = MakePanel(border, {grid: grid}, box);
 
             scene.add(border);
@@ -235,15 +289,12 @@
             let border = object.clone();
             border.children[0].material = new THREE.MeshBasicMaterial({alphaTest: 0.5, map: textureLoader.load("../imgs/panel_test/top_rec/top_rec_border.png")});
 
-            // let grid = object.clone();
-            // grid.children[0].material = new THREE.MeshBasicMaterial({alphaTest: .5, map: textureLoader.load("../imgs/uv_test_grid.png")});
-            // grid.position.z = -1;
 
             let box = new THREE.BoxHelper(border, 0xff0000);
             top_rec = MakePanel(border, {}, box);
 
             scene.add(border);
-            // scene.add(grid);
+            border.position.z = 100;
 
             maskScene.add(object);
         }
@@ -261,16 +312,13 @@
             let border = object.clone();
             border.children[0].material = new THREE.MeshBasicMaterial({alphaTest: 0.5, map: textureLoader.load("../imgs/panel_test/mid_rec/mid_rec_border.png")});
 
-            // let grid = object.clone();
-            // grid.children[0].material = new THREE.MeshBasicMaterial({alphaTest: .5, map: textureLoader.load("../imgs/uv_test_grid.png")});
-            // grid.position.z = -1;
 
             let box = new THREE.BoxHelper(border, 0xff0000);
             mid_rec = MakePanel(border, {}, box);
 
 
+            border.position.z = 100;
             scene.add(border);
-            // scene.add(grid);
 
             maskScene.add(object);
         }
@@ -295,11 +343,13 @@
             let box = new THREE.BoxHelper(border, 0xff0000);
             bot_rec = MakePanel(border, {}, box);
 
+            box.geometry.computeBoundingBox();
+            cameraScrollEnd = box.geometry.boundingBox.min.y + 1 - .1;
+
+            border.position.z = 100;
             scene.add(border);
 
             maskScene.add(object);
-
-            // scene.add(grid);
         }
     );
 
@@ -310,14 +360,8 @@
         let deltaTime = time - previousTime;
         previousTime = time;
 
-        torus.rotation.x += deltaTime;
-        torus.rotation.y += deltaTime;
-        torus.rotation.z += deltaTime;
-
         renderer.clear();
         composer.render(performance.now() * 0.001 + 6000);
-
-        // renderer.render(scene, camera);
 
         requestAnimationFrame(render);
     }
@@ -350,42 +394,19 @@
     function OnScroll(event){
         let scrollPos = WindowScrollNormalPosition();
 
+        let offsetAmount = -1;
+
+        grass0.position.y = lerp(offsetAmount*1.25, 0, scrollPos);
+        tree1.position.y = lerp(offsetAmount*1, 0, scrollPos);
+        grass2.position.y = lerp(offsetAmount*.8, 0, scrollPos);
+        excavator3.position.y = lerp(offsetAmount*.7, 0, scrollPos);
+        fence4.position.y = lerp(offsetAmount*.6, 0, scrollPos);
+        buildings5.position.y = lerp(offsetAmount*.5, 0, scrollPos);
+        buildings6.position.y = lerp(offsetAmount*.2, 0, scrollPos);
+        buildings7.position.y = lerp(offsetAmount*.1, 0, scrollPos);
+
         camera.position.y = lerp(cameraScrollStart, cameraScrollEnd, scrollPos);
-        torus.position.y = camera.position.y;
-        console.log(torus);
-        console.log(camera);
 
-
-        // if(mid_rec){
-        //
-        //     //TODO: bounding box only needs to be computed when scale changes (in screen resize)
-        //     mid_rec.box.geometry.computeBoundingBox();
-        //
-        //
-        //     let mid_rec_normal_position = BoxOnScreenLerpPosition(mid_rec.box, camera);
-        //
-        //
-        //     mid_rec.content.grid.children[0].material.map.offset.y = lerp(0,
-        //         -.1,
-        //         mid_rec_normal_position);
-        //
-        //
-        //     if(BoxIsOnScreen(mid_rec.box, camera)){
-        //         console.log("mid rec is on screen");
-        //     }else{
-        //         console.log("mid rec is not on screen");
-        //     }
-        //
-        //     console.log("__________________");
-        // }
-        //
-        // if(bot_rec){
-        //
-        //     let ratio = canvasWidth/canvasHeight;
-        //     bot_rec.content.grid.children[0].material.map.offset.y = lerp(.1 * ratio,
-        //                                                                    0,
-        //                                                                    scrollPos);
-        // }
     }
 
     document.addEventListener("scroll", OnScroll);
@@ -395,8 +416,6 @@
 
         canvasWidth = canvas.clientWidth;
         canvasHeight = canvas.clientHeight;
-
-        // spriteHeight = 2 * (canvasWidth / canvasHeight) * (3000 / 1080);
 
         camera.aspect = canvasWidth / canvasHeight;
         camera.updateProjectionMatrix();
@@ -415,32 +434,11 @@
             top_rec.border.scale.y = top_rec.content.grid.scale.y =
             mid_rec.border.scale.y = mid_rec.content.grid.scale.y =
             bot_rec.border.scale.y = bot_rec.content.grid.scale.y = panelScaleY;
-        // top_m_tri.scale.y = top_l_tri.scale.y = top_r_tri.scale.y =
-        //                     bot_m_tri.scale.y = bot_l_tri.scale.y =
-        //                     bot_r_tri.scale.y = top_rec.scale.y =
-        //                     mid_rec.scale.y = bot_rec.scale.y = content.scale.y = panelScaleY;
 
 
         cameraScrollStart = 1.25 * (canvasWidth/canvasHeight) * (3786/1980) / 2;
         cameraScrollEnd = -1.25 * (canvasWidth/canvasHeight) * (3786/1980) / 2;
         OnScroll();
-        // top_m_tri.children[0].geometry.computeBoundingBox();
-        // bot_rec.children[0].geometry.computeBoundingBox();
-        //
-        // cameraScrollStart = top_m_tri.children[0].geometry.boundingBox.max.y;
-        // cameraScrollEnd = bot_rec.children[0].geometry.boundingBox.min.y;
-        OnScroll();
-
-        // renderer.setPixelRatio(window.devicePixelRatio);
-        // renderer.setSize(canvasWidth, canvasHeight);
-
-        // let scrollPos = WindowScrollNormalPosition();
-        // let screenPos = lerp((-spriteHeight / 2) + 1, (spriteHeight / 2) - 1, scrollPos);
-
-        // for (let i = 0; i < sprites.length; i++) {
-        //     sprites[i].scale.set(2, spriteHeight, 1);
-        //     sprites[i].position.y = screenPos;
-        // }
 
     }, true);
 
