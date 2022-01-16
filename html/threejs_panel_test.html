@@ -31,6 +31,11 @@
 			}
 
 
+
+
+
+
+
 </script>
 
 <script type="x-shader/x-fragment" id="fragmentshader">
@@ -46,6 +51,11 @@
 				gl_FragColor = gl_FragColor * texture2D( pointTexture, gl_PointCoord );
 
 			}
+
+
+
+
+
 
 
 </script>
@@ -66,6 +76,7 @@
 
     let canvasWidth = canvas.clientWidth;
     let canvasHeight = canvas.clientHeight;
+    let canvasAspect = canvasWidth / canvasHeight;
 
     let renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
     // renderer.setClearColor(new THREE.Color(1, .5, 1));
@@ -117,9 +128,13 @@
     let textureLoader = new THREE.TextureLoader();
     let loader = new FBXLoader();
 
-    let panelScaleX = .006;
-    let panelScaleY = .006 * (canvasWidth / canvasHeight);
+    let panelScalar = .004;
+    let panelScaleX = panelScalar;
+    let panelScaleY = panelScalar * (canvasWidth / canvasHeight);
 
+    function RandomRange(min, max){
+        return Math.random() * (max - min) + min;
+    }
 
     function MakePanel(border, content, box = null) {
         return {border: border, content: content, box: box};
@@ -142,9 +157,9 @@
 
 
     //TODO: base the width and height off of the size of the panel
-    let scalar = 1.6;
-    let maskPanelWidth = scalar;
-    let maskPanelHeight = scalar * (canvasWidth / canvasHeight) * (3786 / 1980);
+    let maskPanelScalar = 1.05;
+    let maskPanelWidth = maskPanelScalar;
+    let maskPanelHeight = maskPanelScalar * (canvasWidth / canvasHeight) * (3786 / 1980);
 
     let grass0 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_grass_0.png", maskPanelWidth, maskPanelHeight);
     grass0.position.z = 0;
@@ -161,6 +176,30 @@
     let fence4 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_fence_4.png", maskPanelWidth, maskPanelHeight);
     fence4.position.z = -4;
     underScene.add(fence4);
+
+    let car = CreateSprite("../imgs/panel_test/cars/car_black.png", maskPanelWidth, maskPanelHeight);
+    car.position.z = -4.5;
+    car.position.x = -1;
+    underScene.add(car);
+    car.material.map.center.set(.5, .5);
+    car.material.map.repeat.set((Math.random() > .5) ? -1 : 1, 1);
+
+    let car1 = CreateSprite("../imgs/panel_test/cars/car_red.png", maskPanelWidth, maskPanelHeight);
+    car1.position.z = -4.5;
+    car1.position.x = -1;
+    underScene.add(car1);
+    car1.material.map.center.set(.5, .5);
+    car1.material.map.repeat.set((Math.random() > .5) ? -1 : 1, 1);
+
+    let car2 = CreateSprite("../imgs/panel_test/cars/car_green.png", maskPanelWidth, maskPanelHeight);
+    car2.position.z = -4.5;
+    car2.position.x = -1;
+    underScene.add(car2);
+    car2.material.map.center.set(.5, .5);
+    car2.material.map.repeat.set((Math.random() > .5) ? -1 : 1, 1);
+
+    let cars = [car, car1, car2];
+
     let buildings5 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_buildings_5.png", maskPanelWidth, maskPanelHeight);
     buildings5.position.z = -5;
     underScene.add(buildings5);
@@ -186,7 +225,7 @@
     // });
 
     let particleMaterial = new THREE.ShaderMaterial({
-       uniforms:  {pointTexture: { value: glowParticleTexture}},
+        uniforms: {pointTexture: {value: glowParticleTexture}},
         vertexShader: document.getElementById("vertexshader").textContent,
         fragmentShader: document.getElementById("fragmentshader").textContent,
         blending: THREE.AdditiveBlending,
@@ -250,6 +289,7 @@
             let box = new THREE.BoxHelper(border, 0xff0000);
             box.geometry.computeBoundingBox();
             cameraScrollStart = box.geometry.boundingBox.max.y - 1 + .1;
+            OnScroll();
 
             top_m_tri = MakePanel(border, {grid: grid}, box);
 
@@ -482,6 +522,7 @@
 
             box.geometry.computeBoundingBox();
             cameraScrollEnd = box.geometry.boundingBox.min.y + 1 - .1;
+            OnScroll();
 
             border.position.z = 100;
             scene.add(border);
@@ -501,19 +542,19 @@
         let opacity = particleGeometry.attributes.opacity.array;
         let position = particleGeometry.attributes.position.array;
 
-        for(let i = 0; i < particleCount; i++){
-            let currentSin = Math.sin(.05 * (i+1) * time);
+        for (let i = 0; i < particleCount; i++) {
+            let currentSin = Math.sin(.05 * (i + 1) * time);
 
-            sizes[i] = (2+Math.sin(.05 * (i+1) * time)) * 37 * ((particleCount-i)/particleCount);
+            sizes[i] = (2 + Math.sin(.05 * (i + 1) * time)) * 37 * ((particleCount - i) / particleCount) * ((canvasWidth * canvasHeight) / (16 * 512 * 512));
 
-            let newOpacity = Math.sin(.05 * (i+1) * time) ;
+            let newOpacity = Math.sin(.05 * (i + 1) * time);
 
-            if(newOpacity <= 0 && opacity[i] > 0){
-                let x = Math.random() * 1.5 - 1.5/2;
-                let y = Math.random() * 1.25 - 1.25/2;
+            if (newOpacity <= 0 && opacity[i] > 0) {
+                let x = Math.random() * 1.5 - 1.5 / 2;
+                let y = Math.random() * 1 - 1 / 2;
 
-                position[i*3] = x;
-                position[i*3+1] = y;
+                position[i * 3] = x * (canvasWidth / canvasHeight);
+                position[i * 3 + 1] = y * (canvasWidth / canvasHeight);
             }
 
             opacity[i] = newOpacity;
@@ -522,6 +563,49 @@
         particleGeometry.attributes.size.needsUpdate = true;
         particleGeometry.attributes.opacity.needsUpdate = true;
         particleGeometry.attributes.position.needsUpdate = true;
+
+        for (let i = 0; i < cars.length; i++) {
+
+            if (cars[i].material.map.repeat.x === 1) {
+                cars[i].position.x += .75 * canvasAspect * deltaTime;
+                if (cars[i].position.x > 2) {
+                    let shouldRespawn = Math.random() < .001;
+
+                    if (shouldRespawn) {
+                        cars[i].material.color.set(0xFFFFFF * RandomRange(.5,1));
+
+                        let isFacingRight = Math.random() > .75;
+                        if (isFacingRight) {
+                            cars[i].material.map.repeat.x = 1;
+                            cars[i].position.x = -1;
+                        } else {
+                            cars[i].material.map.repeat.x = -1;
+                            cars[i].position.x = 1;
+                        }
+                    }
+                }
+            } else if (cars[i].material.map.repeat.x === -1) {
+                cars[i].position.x -= .75 * canvasAspect * deltaTime;
+                if (cars[i].position.x < -2) {
+                    cars[i].material.color.set(0xFFFFFF * RandomRange(.5,1));
+
+                    let shouldRespawn = Math.random() < .001;
+
+                    if (shouldRespawn) {
+                        let isFacingRight = Math.random() > .25;
+
+                        if (isFacingRight) {
+                            cars[i].material.map.repeat.x = 1;
+                            cars[i].position.x = -1;
+                        } else {
+                            cars[i].material.map.repeat.x = -1;
+                            cars[i].position.x = 1;
+                        }
+                    }
+                }
+            }
+        }
+
 
         renderer.clear();
         composer.render(performance.now() * 0.001 + 6000);
@@ -557,18 +641,21 @@
     function OnScroll(event) {
         let scrollPos = WindowScrollNormalPosition();
 
-        let offsetAmount = -1;
+        let offsetAmount = -.5 * (canvasWidth / canvasHeight);
 
         grass0.position.y = lerp(offsetAmount * 1.25, 0, scrollPos);
         tree1.position.y = lerp(offsetAmount * 1, 0, scrollPos);
         grass2.position.y = lerp(offsetAmount * .8, 0, scrollPos);
         excavator3.position.y = lerp(offsetAmount * .7, 0, scrollPos);
         fence4.position.y = lerp(offsetAmount * .6, 0, scrollPos);
+        car.position.y = lerp(offsetAmount * .6, 0, scrollPos);
+        car1.position.y = lerp(offsetAmount * .6, 0, scrollPos);
+        car2.position.y = lerp(offsetAmount * .6, 0, scrollPos);
         buildings5.position.y = lerp(offsetAmount * .5, 0, scrollPos);
         buildings6.position.y = lerp(offsetAmount * .2, 0, scrollPos);
         buildings7.position.y = lerp(offsetAmount * .1, 0, scrollPos);
 
-        particles.position.y = tree1.position.y - (canvasWidth/canvasHeight)*.5;
+        particles.position.y = tree1.position.y - (canvasWidth / canvasHeight) * .4;
 
         camera.position.y = lerp(cameraScrollStart, cameraScrollEnd, scrollPos);
 
@@ -587,7 +674,7 @@
 
         renderer.setSize(canvasWidth, canvasHeight, false);
 
-        panelScaleY = .006 * (canvasWidth / canvasHeight);
+        panelScaleY = panelScalar * (canvasWidth / canvasHeight);
 
         //TODO: update scale
         top_m_tri.border.scale.y = top_m_tri.content.grid.scale.y =
