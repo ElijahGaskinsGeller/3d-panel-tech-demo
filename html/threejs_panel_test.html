@@ -6,7 +6,7 @@
     <script src="../js/core-functionality.js"></script>
 </head>
 
-<body style="margin: 0; padding: 0; height: 5000px;">
+<body style="margin: 0; padding: 0; height: 500vh;">
 
 <canvas id="c" width="1920px" height="1080px" style="position: fixed; width: 100%; height: 100%;"></canvas>
 
@@ -504,11 +504,11 @@
         for(let i = 0; i < particleCount; i++){
             let currentSin = Math.sin(.05 * (i+1) * time);
 
-            sizes[i] = (2+Math.sin(.05 * (i+1) * time)) * 37;
+            sizes[i] = (2+Math.sin(.05 * (i+1) * time)) * 37 * ((particleCount-i)/particleCount);
 
             let newOpacity = Math.sin(.05 * (i+1) * time) ;
 
-            if(newOpacity <= 0){
+            if(newOpacity <= 0 && opacity[i] > 0){
                 let x = Math.random() * 1.5 - 1.5/2;
                 let y = Math.random() * 1.25 - 1.25/2;
 
