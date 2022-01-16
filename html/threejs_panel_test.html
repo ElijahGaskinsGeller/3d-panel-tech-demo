@@ -128,7 +128,8 @@
     let textureLoader = new THREE.TextureLoader();
     let loader = new FBXLoader();
 
-    let panelScalar = .004;
+    console.log(canvasWidth);
+    let panelScalar = (canvasWidth > 1000)? .004 : .007;
     let panelScaleX = panelScalar;
     let panelScaleY = panelScalar * (canvasWidth / canvasHeight);
 
@@ -155,9 +156,17 @@
         return sprite;
     }
 
+    function GenerateParticlePosition(){
+        //TODO: pass in aspect
+        let x = RandomRange(-.25,.25) * canvasAspect;
+        let y = RandomRange(-.35,.35) * canvasAspect;
+
+        return {x: x, y: y};
+    }
+
 
     //TODO: base the width and height off of the size of the panel
-    let maskPanelScalar = 1.05;
+    let maskPanelScalar = (canvasWidth > 1000)? 1.05: 1.85;
     let maskPanelWidth = maskPanelScalar;
     let maskPanelHeight = maskPanelScalar * (canvasWidth / canvasHeight) * (3786 / 1980);
 
@@ -228,7 +237,7 @@
         uniforms: {pointTexture: {value: glowParticleTexture}},
         vertexShader: document.getElementById("vertexshader").textContent,
         fragmentShader: document.getElementById("fragmentshader").textContent,
-        blending: THREE.AdditiveBlending,
+        // blending: THREE.AdditiveBlending,
         depthTest: false,
         transparent: true,
         vertexColors: false
@@ -241,14 +250,13 @@
 
     let particleCount = 10;
     for (let i = 0; i < particleCount; i++) {
-        let x = Math.random() * 1 - .5;
-        let y = Math.random() * 1 - .5;
+        let randomPos = GenerateParticlePosition();
         let z = -1;
 
         let opacity = Math.random();
         let size = 45;
 
-        particleVertices.push(x, y, z);
+        particleVertices.push(randomPos.x, randomPos.y, z);
         particleOpacities.push(opacity);
         particleSizes.push(size);
     }
@@ -546,15 +554,15 @@
             let currentSin = Math.sin(.05 * (i + 1) * time);
 
             sizes[i] = (2 + Math.sin(.05 * (i + 1) * time)) * 37 * ((particleCount - i) / particleCount) * ((canvasWidth * canvasHeight) / (16 * 512 * 512));
+            position[i*3+1] += i*.00001*canvasAspect;
 
             let newOpacity = Math.sin(.05 * (i + 1) * time);
 
             if (newOpacity <= 0 && opacity[i] > 0) {
-                let x = Math.random() * 1.5 - 1.5 / 2;
-                let y = Math.random() * 1 - 1 / 2;
+                let randomPos = GenerateParticlePosition();
 
-                position[i * 3] = x * (canvasWidth / canvasHeight);
-                position[i * 3 + 1] = y * (canvasWidth / canvasHeight);
+                position[i * 3] = randomPos.x;
+                position[i * 3 + 1] = randomPos.y;
             }
 
             opacity[i] = newOpacity;
@@ -655,7 +663,7 @@
         buildings6.position.y = lerp(offsetAmount * .2, 0, scrollPos);
         buildings7.position.y = lerp(offsetAmount * .1, 0, scrollPos);
 
-        particles.position.y = tree1.position.y - (canvasWidth / canvasHeight) * .4;
+        particles.position.y = tree1.position.y - canvasAspect * .4;
 
         camera.position.y = lerp(cameraScrollStart, cameraScrollEnd, scrollPos);
 
